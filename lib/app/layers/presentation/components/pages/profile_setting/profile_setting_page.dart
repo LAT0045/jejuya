@@ -26,14 +26,6 @@ class ProfileSettingPage extends StatelessWidget
   /// Default constructor
   ProfileSettingPage({super.key});
 
-  List<Map<String, dynamic>> menuOptions = [
-    {
-      "icon": LocalSvgRes.localize,
-      "title": tr("setting.languages"),
-      "onTap": () {},
-    },
-  ];
-
   List<Map<String, dynamic>> menuAccount = [
     {
       "icon": LocalSvgRes.user,
@@ -93,9 +85,14 @@ class ProfileSettingPage extends StatelessWidget
                   fontWeight: FontWeight.w600,
                 ),
               ).marginOnly(top: 36.hMin),
-              languageBtn,
-              SettingMenu(title: tr("setting.account"), list: menuAccount),
-              SettingMenu(title: tr("setting.sign_out"), list: menuResource)
+              SettingItem(
+                  title: "setting.languages",
+                  icon: LocalSvgRes.localize,
+                  onTap: () {
+                    showdialog(context);
+                  }),
+              SettingMenu(title: "setting.account", list: menuAccount),
+              SettingMenu(title: "setting.sign_out", list: menuResource),
             ],
           ).paddingOnly(
             top: 20.wMin,
@@ -136,13 +133,13 @@ class ProfileSettingPage extends StatelessWidget
       );
 
   Widget SettingMenu(
-      {required String title, required List<Map<String, dynamic>> list}) {
+      {required String title, required List<Map<String, dynamic>>? list}) {
     return Builder(builder: (context) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            title,
+            tr(title),
             style: TextStyle(
               fontSize: 14.spMin,
               color: context.color.black,
@@ -150,8 +147,8 @@ class ProfileSettingPage extends StatelessWidget
             ),
           ).marginOnly(top: 36.hMin),
           Column(
-              children: List.generate(list.length, (index) {
-            final item = list[index];
+              children: List.generate(list?.length ?? 0, (index) {
+            final item = list![index];
             return SettingItem(
               title: item['title'],
               icon: item['icon'],
@@ -169,9 +166,8 @@ class ProfileSettingPage extends StatelessWidget
       required VoidCallback onTap}) {
     return Builder(builder: (context) {
       return BouncesAnimatedButton(
-        height: 60.hMin,
         onPressed: onTap,
-        leading: DecoratedBox(
+        leading: Container(
           decoration: const BoxDecoration(
             border: Border(
               bottom: BorderSide(color: Colors.grey, width: 1),
@@ -187,16 +183,14 @@ class ProfileSettingPage extends StatelessWidget
                 ),
               ),
               Expanded(
-                  child: Text(
-                title,
-                textAlign: TextAlign.start,
-                style: TextStyle(
-                  fontSize: 16.spMin,
-                  color: context.color.black,
-                ),
-              )).paddingSymmetric(
-                horizontal: 17.wMin,
-                vertical: 15.hMin,
+                child: Text(
+                  tr(title),
+                  textAlign: TextAlign.start,
+                  style: TextStyle(
+                    fontSize: 16.spMin,
+                    color: context.color.black,
+                  ),
+                ).paddingSymmetric(horizontal: 17.wMin, vertical: 15.hMin),
               ),
               const Spacer(),
               const Icon(Icons.arrow_forward_ios, size: 20, color: Colors.black)
@@ -207,104 +201,60 @@ class ProfileSettingPage extends StatelessWidget
     });
   }
 
-  Widget get languageBtn => Builder(
-        builder: (context) {
-          final settingCtrl = globalController<SettingController>();
-          return BouncesAnimatedButton(
-            height: 60.hMin,
-            onPressed: () {
-              showDialog(
-                context: Get.context!,
-                builder: (BuildContext context) {
-                  List<String> languages = ["English", "Vietnamese", "Korean"];
-                  String selectedLanguage = "English";
-                  String tempSelectedLanguage = selectedLanguage;
-                  return AlertDialog(
-                    title: Text(tr("setting.languages")),
-                    content: StatefulBuilder(
-                      builder: (BuildContext context, StateSetter setState) {
-                        return DropdownButton<String>(
-                          value: tempSelectedLanguage,
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              tempSelectedLanguage = newValue!;
-                            });
-                          },
-                          items: languages
-                              .map<DropdownMenuItem<String>>((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            );
-                          }).toList(),
-                        );
-                      },
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          nav.back();
-                        },
-                        child: Text(tr("setting.cancel")),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          selectedLanguage = tempSelectedLanguage;
-                          if (selectedLanguage == "English") {
-                            settingCtrl.language.value =
-                                LanguageSupported.english;
-                          }
-                          if (selectedLanguage == "Vietnamese") {
-                            settingCtrl.language.value =
-                                LanguageSupported.vietnamese;
-                          }
-                          if (selectedLanguage == "Korean") {
-                            settingCtrl.language.value =
-                                LanguageSupported.korean;
-                          }
-                          html.window.location.reload();
-                        },
-                        child: Text(tr("setting.ok")),
-                      ),
-                    ],
-                  );
+  void showdialog(BuildContext context) {
+    final settingCtrl = globalController<SettingController>();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        List<String> languages = ["English", "Vietnamese", "Korean"];
+        String selectedLanguage = "English";
+        String tempSelectedLanguage = selectedLanguage;
+        return AlertDialog(
+          title: Text(tr("setting.languages")),
+          content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return DropdownButton<String>(
+                value: tempSelectedLanguage,
+                onChanged: (String? newValue) {
+                  setState(() {
+                    tempSelectedLanguage = newValue!;
+                  });
                 },
+                items: languages.map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
               );
             },
-            leading: DecoratedBox(
-              decoration: const BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: Colors.grey, width: 1),
-                ),
-              ),
-              child: Row(
-                children: [
-                  SvgPicture.asset(
-                    LocalSvgRes.localize,
-                    colorFilter: ColorFilter.mode(
-                      context.color.black,
-                      BlendMode.srcIn,
-                    ),
-                  ),
-                  Expanded(
-                      child: Text(
-                    tr("setting.languages"),
-                    textAlign: TextAlign.start,
-                    style: TextStyle(
-                      fontSize: 16.spMin,
-                      color: context.color.black,
-                    ),
-                  )).paddingSymmetric(
-                    horizontal: 17.wMin,
-                    vertical: 15.hMin,
-                  ),
-                  const Spacer(),
-                  const Icon(Icons.arrow_forward_ios,
-                      size: 20, color: Colors.black)
-                ],
-              ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                nav.back();
+              },
+              child: Text(tr("setting.cancel")),
             ),
-          ).paddingSymmetric(horizontal: 1.wMin);
-        },
-      );
+            TextButton(
+              onPressed: () {
+                selectedLanguage = tempSelectedLanguage;
+                if (selectedLanguage == "English") {
+                  settingCtrl.language.value = LanguageSupported.english;
+                }
+                if (selectedLanguage == "Vietnamese") {
+                  settingCtrl.language.value = LanguageSupported.vietnamese;
+                }
+                if (selectedLanguage == "Korean") {
+                  settingCtrl.language.value = LanguageSupported.korean;
+                }
+                html.window.location.reload();
+              },
+              child: Text(tr("setting.ok")),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
