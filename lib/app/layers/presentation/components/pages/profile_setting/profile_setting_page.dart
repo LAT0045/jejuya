@@ -34,42 +34,42 @@ class ProfileSettingPage extends StatelessWidget
     },
   ];
 
-  List<Map<String, dynamic>> menuAccount = [
-    {
-      "icon": LocalSvgRes.user,
-      "title": tr("setting.change_password"),
-      "onTap": () {},
-    },
-    {
-      "icon": LocalSvgRes.user,
-      "title": tr("setting.change_infomation"),
-      "onTap": () {
+  final List<SettingMenuItem> menuAccount = [
+    SettingMenuItem(
+      icon: LocalSvgRes.user,
+      title: tr("setting.change_password"),
+      onTap: () {},
+    ),
+    SettingMenuItem(
+      icon: LocalSvgRes.user,
+      title: tr("setting.change_infomation"),
+      onTap: () {
         print("Thông tin được chọn");
       },
-    },
+    ),
   ];
 
-  List<Map<String, dynamic>> menuResource = [
-    {
-      "icon": LocalSvgRes.chat,
-      "title": tr("setting.contact_support"),
-      "onTap": () {},
-    },
-    {
-      "icon": LocalSvgRes.chat,
-      "title": tr("setting.terms_services"),
-      "onTap": () {
+  final List<SettingMenuItem> menuResource = [
+    SettingMenuItem(
+      icon: LocalSvgRes.chat,
+      title: tr("setting.contact_support"),
+      onTap: () {},
+    ),
+    SettingMenuItem(
+      icon: LocalSvgRes.chat,
+      title: tr("setting.terms_services"),
+      onTap: () {
         print("Thông tin được chọn");
       },
-    },
-    {
-      "icon": LocalSvgRes.logout,
-      "title": tr("setting.sign_out"),
-      "onTap": () {
+    ),
+    SettingMenuItem(
+      icon: LocalSvgRes.logout,
+      title: tr("setting.sign_out"),
+      onTap: () {
         FirebaseAuth.instance.signOut();
         nav.toSignIn();
       },
-    },
+    ),
   ];
 
   @override
@@ -94,8 +94,8 @@ class ProfileSettingPage extends StatelessWidget
                 ),
               ).marginOnly(top: 36.hMin),
               languageBtn,
-              SettingMenu(title: tr("setting.account"), list: menuAccount),
-              SettingMenu(title: tr("setting.sign_out"), list: menuResource)
+              SettingMenu(title: tr("setting.account"), items: menuAccount),
+              SettingMenu(title: tr("setting.sign_out"), items: menuResource)
             ],
           ).paddingOnly(
             top: 20.wMin,
@@ -136,7 +136,7 @@ class ProfileSettingPage extends StatelessWidget
       );
 
   Widget SettingMenu(
-      {required String title, required List<Map<String, dynamic>> list}) {
+      {required String title, required List<SettingMenuItem> items}) {
     return Builder(builder: (context) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,15 +149,19 @@ class ProfileSettingPage extends StatelessWidget
               fontWeight: FontWeight.w600,
             ),
           ).marginOnly(top: 36.hMin),
-          Column(
-              children: List.generate(list.length, (index) {
-            final item = list[index];
-            return SettingItem(
-              title: item['title'],
-              icon: item['icon'],
-              onTap: item['onTap'],
-            );
-          })),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return SettingItem(
+                title: item.title,
+                icon: item.icon,
+                onTap: item.onTap,
+              );
+            },
+          ),
         ],
       );
     });
@@ -187,16 +191,20 @@ class ProfileSettingPage extends StatelessWidget
                 ),
               ),
               Expanded(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 17.wMin,
+                    vertical: 15.hMin,
+                  ),
                   child: Text(
-                title,
-                textAlign: TextAlign.start,
-                style: TextStyle(
-                  fontSize: 16.spMin,
-                  color: context.color.black,
+                    title,
+                    textAlign: TextAlign.start,
+                    style: TextStyle(
+                      fontSize: 16.spMin,
+                      color: context.color.black,
+                    ),
+                  ),
                 ),
-              )).paddingSymmetric(
-                horizontal: 17.wMin,
-                vertical: 15.hMin,
               ),
               const Spacer(),
               const Icon(Icons.arrow_forward_ios, size: 20, color: Colors.black)
@@ -287,16 +295,20 @@ class ProfileSettingPage extends StatelessWidget
                     ),
                   ),
                   Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 17.wMin,
+                        vertical: 15.hMin,
+                      ),
                       child: Text(
-                    tr("setting.languages"),
-                    textAlign: TextAlign.start,
-                    style: TextStyle(
-                      fontSize: 16.spMin,
-                      color: context.color.black,
+                        tr("setting.languages"),
+                        textAlign: TextAlign.start,
+                        style: TextStyle(
+                          fontSize: 16.spMin,
+                          color: context.color.black,
+                        ),
+                      ),
                     ),
-                  )).paddingSymmetric(
-                    horizontal: 17.wMin,
-                    vertical: 15.hMin,
                   ),
                   const Spacer(),
                   const Icon(Icons.arrow_forward_ios,
@@ -307,4 +319,16 @@ class ProfileSettingPage extends StatelessWidget
           ).paddingSymmetric(horizontal: 1.wMin);
         },
       );
+}
+
+class SettingMenuItem {
+  final String icon;
+  final String title;
+  final VoidCallback onTap;
+
+  SettingMenuItem({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+  });
 }
