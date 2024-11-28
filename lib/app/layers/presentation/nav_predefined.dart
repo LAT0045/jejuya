@@ -140,15 +140,15 @@ class PredefinedPage {
     GetPageEnsureAuth(
       name: PredefinedRoute.scheduleDetail,
       page: () {
-        if (Get.arguments == null) {
-          var user = FirebaseAuth.instance.currentUser;
-          if (user != null) {
-            return nav.home;
+        if (Get.arguments != null && Get.arguments is Schedule) {
+          Schedule? schedule = Get.arguments as Schedule?;
+          return nav.scheduleDetail(schedule);
+        } else {
+          if (FirebaseAuth.instance.currentUser == null) {
+            return nav.error;
           }
-          return nav.signIn;
+          return nav.home;
         }
-        Schedule schedule = Get.arguments as Schedule;
-        return nav.scheduleDetail(schedule);
       },
     ),
     GetPageEnsureAuth(
