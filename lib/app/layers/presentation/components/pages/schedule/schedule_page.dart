@@ -29,7 +29,6 @@ class SchedulePage extends StatelessWidget
   @override
   Widget build(BuildContext context) {
     final ctrl = controller(context);
-    print(ctrl.userDetail.value);
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -167,7 +166,7 @@ class SchedulePage extends StatelessWidget
               onPressed: () {
                 //print(ctrl.userDetail.value?.schedules?[id]);
                 nav.toScheduleDetail(
-                    scheduleId: ctrl.userDetail.value?.schedules?[id].id ?? '');
+                    schedule: ctrl.userDetail.value!.schedules![id]);
               },
               leading: Container(
                 decoration: BoxDecoration(

@@ -40,4 +40,9 @@ class Schedule {
   String? accommodation;
 
   String? name;
+
+  @override
+  String toString() {
+    return 'Schedule{id: $id, startTime: ${startTime?.toIso8601String()}, endTime: ${endTime?.toIso8601String()}, accommodation: $accommodation, name: $name, scheduleItems: $scheduleItems}';
+  }
 }
