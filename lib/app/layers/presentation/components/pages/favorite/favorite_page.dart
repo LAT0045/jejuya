@@ -27,6 +27,7 @@ class FavoritePage extends StatelessWidget
 
   @override
   Widget build(BuildContext context) {
+    var ctrl = controller(context);
     return Scaffold(
       body: _body,
     );
@@ -164,9 +165,10 @@ class FavoritePage extends StatelessWidget
 
   Widget get _listSchedule => Builder(
         builder: (context) {
+          var ctrl = controller(context);
           return Expanded(
             child: ListView.builder(
-              itemCount: 10,
+              itemCount: ctrl.userDetail.value?.favoriteSchedule?.length ?? 0,
               itemBuilder: (context, index) {
                 return _scheduleItem(index);
               },
@@ -291,7 +293,7 @@ class FavoritePage extends StatelessWidget
                                 ),
                               ).paddingOnly(right: 10.wMin),
                               Text(
-                                "12/10/2024 - 20/10/2024",
+                                "${DateFormat("dd/MM/yyyy").format(ctrl.userDetail.value!.favoriteSchedule![id].startTime!)} - ${DateFormat("dd/MM/yyyy").format(ctrl.userDetail.value!.favoriteSchedule![id].endTime!)}",
                                 style: TextStyle(
                                   color: context.color.primaryLight,
                                   fontSize: 12.spMin,
@@ -300,14 +302,15 @@ class FavoritePage extends StatelessWidget
                             ],
                           ).paddingOnly(bottom: 10.hMin),
                           Text(
-                            "Lịch trình 1",
+                            ctrl.userDetail.value!.favoriteSchedule![id].name!,
                             style: TextStyle(
                               color: context.color.black,
                               fontSize: 12.spMin,
                             ),
                           ).paddingOnly(bottom: 10.hMin),
                           Text(
-                            "Hotel Honey Crown",
+                            ctrl.userDetail.value!.favoriteSchedule![id]
+                                .accommodation!,
                             style: TextStyle(
                               color: context.color.black,
                               fontWeight: FontWeight.w300,
