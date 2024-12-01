@@ -178,9 +178,10 @@ class FavoritePage extends StatelessWidget
       );
   Widget get _listDestination => Builder(
         builder: (context) {
+          final ctrl = controller(context);
           return Expanded(
             child: ListView.builder(
-              itemCount: 10,
+              itemCount: ctrl.favoriteSpot.length,
               itemBuilder: (context, index) {
                 return _destinationItem(index);
               },
@@ -425,7 +426,7 @@ class FavoritePage extends StatelessWidget
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            "Nohyung Supermarket",
+                            ctrl.favoriteSpot[id].businessNameEnglish,
                             style: TextStyle(
                               color: context.color.black,
                               fontSize: 12.spMin,
@@ -442,7 +443,7 @@ class FavoritePage extends StatelessWidget
                                 ),
                               ).paddingOnly(right: 7.hMin),
                               Text(
-                                "98 Nohyeong-ro, Jeju-si",
+                                ctrl.favoriteSpot[id].locationEnglish,
                                 style: TextStyle(
                                   fontSize: 12.spMin,
                                   color: context.color.black,

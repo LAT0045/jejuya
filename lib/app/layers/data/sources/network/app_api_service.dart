@@ -307,6 +307,7 @@ class AppApiServiceImpl extends AppApiService {
       'user/detail',
       headers: authHeader,
       decoder: (data) {
+        print(data['data']["FavoriteSpot"]);
         UserDetail userDetail =
             UserDetail.fromJson(data['data'] as Map<String, dynamic>);
         return userDetail;

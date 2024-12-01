@@ -25,11 +25,6 @@ class ScheduleDetailController extends BaseController
     with UseCaseProvider, GlobalControllerProvider {
   /// Default constructor for the ScheduleDetailController.
   ScheduleDetailController({required this.schedule}) {
-    if (schedule == null) {
-      print(
-          "objadsssssssssssssssssssssssssssssssssssssssadasdasdsadasdasdsadasdect");
-    }
-
     scheduleItemsByDate = groupScheduleItemsByDate();
 
     _fetchData();
