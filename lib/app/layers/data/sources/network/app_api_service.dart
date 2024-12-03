@@ -63,7 +63,7 @@ abstract class AppApiService extends BaseApiService {
     String? endDate,
     List<ScheduleItem>? listDestination,
   });
-  
+
   Future<UserDetail> fetchUserDetail();
 
   Future<List<Hotel>> fetchHotels();
@@ -297,7 +297,7 @@ class AppApiServiceImpl extends AppApiService {
     );
   }
 
-  @override        
+  @override
   Future<UserDetail> fetchUserDetail() async {
     String? token =
         "${await fba.FirebaseAuth.instance.currentUser?.getIdToken()}";
@@ -307,7 +307,7 @@ class AppApiServiceImpl extends AppApiService {
       'user/detail',
       headers: authHeader,
       decoder: (data) {
-        //print(data['data']);
+        print(data['data']["FavoriteSpot"]);
         UserDetail userDetail =
             UserDetail.fromJson(data['data'] as Map<String, dynamic>);
         return userDetail;

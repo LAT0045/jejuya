@@ -9,6 +9,7 @@ import 'package:jejuya/app/common/utils/extension/build_context/app_color.dart';
 import 'package:jejuya/app/common/utils/extension/num/adaptive_size.dart';
 import 'package:jejuya/app/common/utils/extension/string/string_to_color.dart';
 import 'package:jejuya/app/core_impl/di/injector_impl.dart';
+import 'package:jejuya/app/layers/data/sources/local/model/destination/destination_detail.dart';
 import 'package:jejuya/app/layers/data/sources/local/model/language/language_supported.dart';
 import 'package:jejuya/app/layers/presentation/components/pages/schedule_detail/mockup/schedule.dart';
 import 'package:jejuya/app/layers/presentation/components/pages/schedule_detail/schedule_detail_controller.dart';
@@ -18,7 +19,8 @@ import 'package:jejuya/app/layers/presentation/nav_predefined.dart';
 import 'package:jejuya/core/arch/presentation/controller/controller_provider.dart';
 
 /// Page widget for the Schedule detail feature
-class ScheduleDetailPage extends StatelessWidget
+///
+class ScheduleDetailPage extends StatefulWidget
     with
         ControllerProvider<ScheduleDetailController>,
         GlobalControllerProvider {
@@ -26,46 +28,53 @@ class ScheduleDetailPage extends StatelessWidget
   const ScheduleDetailPage({super.key});
 
   @override
+  _ScheduleDetailPageState createState() => _ScheduleDetailPageState();
+}
+
+class _ScheduleDetailPageState extends State<ScheduleDetailPage> {
+  @override
   Widget build(BuildContext context) {
-    final ctrl = controller(context);
-    print(ctrl.scheduleId);
+    final ctrl = widget.controller(context);
+    if (ctrl.schedule == null) {
+      print("object");
+      return const Center(child: CircularProgressIndicator());
+    }
+    ;
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: _headerBtn,
-          ),
-          SliverToBoxAdapter(
-            child: _headerTxt,
-          ),
-          SliverToBoxAdapter(
-            child: _day,
-          ),
-          Observer(
-            builder: (BuildContext context) {
-              final ctrl = controller(context);
-              final current =
-                  ctrl.schedules[ctrl.selectedDayIndex.value].locations;
-              return SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => BouncesAnimatedButton(
-                    height: 168.hMin,
-                    onPressed: () {
-                      ctrl.selectedDestinationIndex.value = index;
-                      //nav.showDetinationInfoSheet(location: current[index]);
-                    },
-                    leading: _destinationItem(current[index], index),
-                  ),
-                  childCount: current.length,
-                ),
-              );
-            },
-          ),
-        ],
-      ).paddingSymmetric(
-        vertical: 10.hMin,
-        horizontal: 16.wMin,
-      ),
+        body: Column(
+      children: [
+        _headerBtn,
+        _headerTxt,
+        _day,
+        Expanded(
+          child: Observer(builder: (BuildContext context) {
+            int itemCount = ctrl.scheduleItemsByDate.values
+                .elementAt(ctrl.selectedDayIndex.value)
+                .length;
+            return ListView.builder(
+              controller: ctrl.scrollController,
+              // itemCount: itemCount + 1,
+              itemCount: ctrl.destinationDetails.length + 1,
+              itemBuilder: (context, index) {
+                // if (index < itemCount) {
+                if (index < ctrl.destinationDetails.length) {
+                  return _destinationItem(
+                      ctrl.destinationDetails[index]!, index);
+                } else {
+                  return Center(
+                    child: CircularProgressIndicator(
+                      color: context.color.primaryColor,
+                    ),
+                  );
+                }
+              },
+            );
+          }),
+        )
+      ],
+    )).paddingSymmetric(
+      vertical: 10.hMin,
+      horizontal: 16.wMin,
     );
   }
 
@@ -161,13 +170,12 @@ class ScheduleDetailPage extends StatelessWidget
 
   Widget get _day => Observer(
         builder: (context) {
-          final ctrl = controller(context);
-          final listDay = ctrl.schedules;
+          final ctrl = widget.controller(context);
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "${listDay.first.date} - ${listDay.last.date}",
+                "${DateFormat('dd/MM/yyyy').format(ctrl.schedule!.startTime!)} - ${DateFormat('dd/MM/yyyy').format(ctrl.schedule!.endTime!)}",
                 style: TextStyle(
                   fontSize: 14.spMin,
                   color: context.color.black,
@@ -182,8 +190,8 @@ class ScheduleDetailPage extends StatelessWidget
 
   Widget get _listDay => Observer(
         builder: (context) {
-          final ctrl = controller(context);
-          final listDay = ctrl.schedules;
+          final ctrl = widget.controller(context);
+          final listDay = ctrl.scheduleItemsByDate;
           return SizedBox(
             height: 100,
             child: ListView.builder(
@@ -196,7 +204,12 @@ class ScheduleDetailPage extends StatelessWidget
                   onPressed: () {
                     ctrl.updateSelectedDay(index);
                   },
-                  leading: _dayItem(listDay[index].date, index),
+                  // leading: _dayItem(listDay[index].date, index),
+                  leading: _dayItem(
+                      DateFormat('dd/MM/yyy')
+                          .format(DateTime.parse(listDay.keys.elementAt(index)))
+                          .toString(),
+                      index),
                 );
               },
             ),
@@ -206,7 +219,7 @@ class ScheduleDetailPage extends StatelessWidget
 
   Widget _dayItem(String date, int index) => Observer(
         builder: (context) {
-          final ctrl = controller(context);
+          final ctrl = widget.controller(context);
           final formattedDay = ctrl.formatDate(date);
           return Column(
             children: [
@@ -285,10 +298,13 @@ class ScheduleDetailPage extends StatelessWidget
 
   Widget get _info => Observer(
         builder: (context) {
-          final ctrl = controller(context);
-          final currentDate = ctrl.schedules[ctrl.selectedDayIndex.value].date;
+          final ctrl = widget.controller(context);
+          final currentDate = DateFormat('dd/MM/yyy')
+              .format(DateTime.parse(ctrl.scheduleItemsByDate.keys
+                  .elementAt(ctrl.selectedDayIndex.value)))
+              .toString();
           final formattedDay = ctrl.formatDate(currentDate);
-          final settingCtrl = globalController<SettingController>();
+          final settingCtrl = widget.globalController<SettingController>();
 
           final dayRank = settingCtrl.language.value != LanguageSupported.korean
               ? "${tr("destination_detail.day")} ${ctrl.selectedDayIndex.value + 1}"
@@ -320,7 +336,7 @@ class ScheduleDetailPage extends StatelessWidget
               ).paddingOnly(bottom: 5.hMin),
               _iconText(
                 LocalSvgRes.marker,
-                "10 Samseong-ro, Jeju-si (Idoil-dong)",
+                ctrl.schedule!.accommodation!,
                 true,
               ),
             ],
@@ -328,9 +344,9 @@ class ScheduleDetailPage extends StatelessWidget
         },
       );
 
-  Widget _destinationItem(Location location, int index) => Observer(
+  Widget _destinationItem(DestinationDetail destination, int index) => Observer(
         builder: (context) {
-          final ctrl = controller(context);
+          final ctrl = widget.controller(context);
           return Container(
             decoration: BoxDecoration(
               color: ctrl.selectedDestinationIndex.value == index
@@ -352,21 +368,24 @@ class ScheduleDetailPage extends StatelessWidget
                     children: [
                       _iconText(
                         LocalSvgRes.node,
-                        location.name,
+                        destination.businessNameEnglish,
+                        //location.name,
                         true,
                       ).paddingOnly(
                         bottom: 16.hMin,
                       ),
                       _iconText(
                         LocalSvgRes.marker,
-                        location.address,
+                        destination.locationEnglish,
+                        //location.address,
                         false,
                       ).paddingOnly(
                         bottom: 16.hMin,
                       ),
                       _iconText(
                         LocalSvgRes.clock,
-                        location.time,
+                        destination.operatingHoursEnglish,
+                        // location.time,
                         false,
                       ),
                     ],

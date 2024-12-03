@@ -17,10 +17,12 @@ class SignInController extends BaseController with UseCaseProvider {
   // --- Member Variables ---
 
   /// Email Controller
-  final TextEditingController emailController = TextEditingController();
+  final TextEditingController emailController =
+      TextEditingController(text: "hiyan789@gmail.com");
 
   /// Password Controller
-  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController passwordController =
+      TextEditingController(text: "lethu0045");
   final auth = FirebaseAuth.instance;
 
   // --- Computed Variables ---

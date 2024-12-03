@@ -1,3 +1,4 @@
+import 'package:jejuya/app/layers/data/sources/local/model/destination/destination.dart';
 import 'package:jejuya/app/layers/data/sources/local/model/schedule/schedule.dart';
 
 class UserDetail {
@@ -7,11 +8,14 @@ class UserDetail {
 
   List<Schedule>? favoriteSchedule;
 
+  List<Destination>? favoriteSpots;
+
   /// Default constructor for the [UserDetail].
   UserDetail({
     required this.id,
     this.schedules,
     this.favoriteSchedule,
+    this.favoriteSpots,
   });
 
   factory UserDetail.fromJson(Map<String, dynamic> json) {
@@ -29,12 +33,18 @@ class UserDetail {
           .map((v) => Schedule.fromJson(v))
           .toList();
     }
-
+    List<Destination>? favoriteSpots = [];
+    if (json['FavoriteSpot'] != null) {
+      favoriteSpots = (json['FavoriteSpot'] as List)
+          .map((v) => Destination.fromJson(v))
+          .toList();
+    }
     // Trả về UserDetail với các danh sách đã xử lý
     return UserDetail(
       id: json['id'] ?? "", // Đảm bảo không null
       schedules: schedules,
       favoriteSchedule: favoriteSchedule,
+      favoriteSpots: favoriteSpots,
     );
   }
 

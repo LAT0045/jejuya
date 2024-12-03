@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:jejuya/app/core_impl/di/injector_impl.dart';
 import 'package:jejuya/app/layers/data/sources/local/model/destination/destination.dart';
 // import 'package:jejuya/app/layers/data/sources/local/model/destinationDetail/destinationDetail.dart';
 import 'package:jejuya/app/layers/data/sources/local/model/destination/destination_detail.dart';
+import 'package:jejuya/app/layers/data/sources/local/model/schedule/schedule.dart';
 import 'package:jejuya/app/layers/presentation/components/pages/create_schedule/create_schedule_controller.dart';
 import 'package:jejuya/app/layers/presentation/components/pages/create_schedule/create_schedule_page.dart';
 import 'package:jejuya/app/layers/presentation/components/pages/destination_detail/destination_detail_controller.dart';
@@ -68,7 +70,7 @@ class PredefinedRoute {
   static const String schedule = '/schedule';
 
   /// Schedule detail page route.
-  static const String scheduleDetail = '/schedule_detail?.*';
+  static const String scheduleDetail = '/schedule_detail';
 
   /// Favorite page route.
   static const String favorite = '/favorite';
@@ -138,9 +140,15 @@ class PredefinedPage {
     GetPageEnsureAuth(
       name: PredefinedRoute.scheduleDetail,
       page: () {
-        String? id =
-            Uri.tryParse(Get.currentRoute)!.queryParameters['schedule_id']!;
-        return nav.scheduleDetail(id);
+        if (Get.arguments != null && Get.arguments is Schedule) {
+          Schedule? schedule = Get.arguments as Schedule?;
+          return nav.scheduleDetail(schedule);
+        } else {
+          if (FirebaseAuth.instance.currentUser == null) {
+            return nav.error;
+          }
+          return nav.home;
+        }
       },
     ),
     GetPageEnsureAuth(
@@ -237,8 +245,8 @@ extension NavPredefined on navi.Navigator {
       );
 
   /// Home page widget.
-  Widget scheduleDetail(String? scheduleId) => BaseProvider(
-        ctrl: ScheduleDetailController(scheduleId: scheduleId),
+  Widget scheduleDetail(Schedule? schedule) => BaseProvider(
+        ctrl: ScheduleDetailController(schedule: schedule),
         child: const ScheduleDetailPage(),
       );
 
@@ -336,10 +344,9 @@ extension ToPagePredefined on navi.Navigator {
       );
 
   /// Navigate to the schedule page.
-  Future<T?>? toScheduleDetail<T>({required String? scheduleId}) => toNamed(
-        PredefinedRoute.scheduleDetail
-            .replaceAll('.*', 'schedule_id=$scheduleId'),
-        arguments: scheduleId,
+  Future<T?>? toScheduleDetail<T>({required Schedule schedule}) => toNamed(
+        PredefinedRoute.scheduleDetail,
+        arguments: schedule,
       );
 
   /// Navigate to the home page.

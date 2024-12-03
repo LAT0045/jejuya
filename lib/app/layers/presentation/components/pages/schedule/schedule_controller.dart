@@ -16,7 +16,7 @@ class ScheduleController extends BaseController with UseCaseProvider {
   /// Default constructor for the ScheduleController.
   ScheduleController() {
     notShow();
-    fetchUserDetail();
+    initialize();
   }
 
   // --- Member Variables ---
@@ -36,6 +36,12 @@ class ScheduleController extends BaseController with UseCaseProvider {
   final fetchDetailState = listenable<ScheduleState>(ScheduleState.none);
 
   late final _fetchUserDetail = usecase<FetchUserDetailUsecaseUseCase>();
+
+  @override
+  Future<void> initialize() async {
+    super.initialize();
+    await fetchUserDetail();
+  }
 
   Future<void> fetchUserDetail() async {
     try {
