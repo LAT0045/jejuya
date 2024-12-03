@@ -26,42 +26,50 @@ class ProfileSettingPage extends StatelessWidget
   /// Default constructor
   ProfileSettingPage({super.key});
 
-  List<Map<String, dynamic>> menuAccount = [
+  List<Map<String, dynamic>> menuOptions = [
     {
-      "icon": LocalSvgRes.user,
-      "title": tr("setting.change_password"),
+      "icon": LocalSvgRes.localize,
+      "title": tr("setting.languages"),
       "onTap": () {},
-    },
-    {
-      "icon": LocalSvgRes.user,
-      "title": tr("setting.change_infomation"),
-      "onTap": () {
-        print("Thông tin được chọn");
-      },
     },
   ];
 
-  List<Map<String, dynamic>> menuResource = [
-    {
-      "icon": LocalSvgRes.chat,
-      "title": tr("setting.contact_support"),
-      "onTap": () {},
-    },
-    {
-      "icon": LocalSvgRes.chat,
-      "title": tr("setting.terms_services"),
-      "onTap": () {
+  final List<SettingMenuItem> menuAccount = [
+    SettingMenuItem(
+      icon: LocalSvgRes.user,
+      title: tr("setting.change_password"),
+      onTap: () {},
+    ),
+    SettingMenuItem(
+      icon: LocalSvgRes.user,
+      title: tr("setting.change_infomation"),
+      onTap: () {
         print("Thông tin được chọn");
       },
-    },
-    {
-      "icon": LocalSvgRes.logout,
-      "title": tr("setting.sign_out"),
-      "onTap": () {
+    ),
+  ];
+
+  final List<SettingMenuItem> menuResource = [
+    SettingMenuItem(
+      icon: LocalSvgRes.chat,
+      title: tr("setting.contact_support"),
+      onTap: () {},
+    ),
+    SettingMenuItem(
+      icon: LocalSvgRes.chat,
+      title: tr("setting.terms_services"),
+      onTap: () {
+        print("Thông tin được chọn");
+      },
+    ),
+    SettingMenuItem(
+      icon: LocalSvgRes.logout,
+      title: tr("setting.sign_out"),
+      onTap: () {
         FirebaseAuth.instance.signOut();
         nav.toSignIn();
       },
-    },
+    ),
   ];
 
   @override
@@ -85,14 +93,9 @@ class ProfileSettingPage extends StatelessWidget
                   fontWeight: FontWeight.w600,
                 ),
               ).marginOnly(top: 36.hMin),
-              SettingItem(
-                  title: "setting.languages",
-                  icon: LocalSvgRes.localize,
-                  onTap: () {
-                    showdialog(context);
-                  }),
-              SettingMenu(title: "setting.account", list: menuAccount),
-              SettingMenu(title: "setting.sign_out", list: menuResource),
+              languageBtn,
+              SettingMenu(title: tr("setting.account"), items: menuAccount),
+              SettingMenu(title: tr("setting.sign_out"), items: menuResource)
             ],
           ).paddingOnly(
             top: 20.wMin,
@@ -133,28 +136,32 @@ class ProfileSettingPage extends StatelessWidget
       );
 
   Widget SettingMenu(
-      {required String title, required List<Map<String, dynamic>>? list}) {
+      {required String title, required List<SettingMenuItem> items}) {
     return Builder(builder: (context) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            tr(title),
+            title,
             style: TextStyle(
               fontSize: 14.spMin,
               color: context.color.black,
               fontWeight: FontWeight.w600,
             ),
           ).marginOnly(top: 36.hMin),
-          Column(
-              children: List.generate(list?.length ?? 0, (index) {
-            final item = list![index];
-            return SettingItem(
-              title: item['title'],
-              icon: item['icon'],
-              onTap: item['onTap'],
-            );
-          })),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return SettingItem(
+                title: item.title,
+                icon: item.icon,
+                onTap: item.onTap,
+              );
+            },
+          ),
         ],
       );
     });
@@ -166,8 +173,9 @@ class ProfileSettingPage extends StatelessWidget
       required VoidCallback onTap}) {
     return Builder(builder: (context) {
       return BouncesAnimatedButton(
+        height: 60.hMin,
         onPressed: onTap,
-        leading: Container(
+        leading: DecoratedBox(
           decoration: const BoxDecoration(
             border: Border(
               bottom: BorderSide(color: Colors.grey, width: 1),
@@ -183,14 +191,20 @@ class ProfileSettingPage extends StatelessWidget
                 ),
               ),
               Expanded(
-                child: Text(
-                  tr(title),
-                  textAlign: TextAlign.start,
-                  style: TextStyle(
-                    fontSize: 16.spMin,
-                    color: context.color.black,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 17.wMin,
+                    vertical: 15.hMin,
                   ),
-                ).paddingSymmetric(horizontal: 17.wMin, vertical: 15.hMin),
+                  child: Text(
+                    title,
+                    textAlign: TextAlign.start,
+                    style: TextStyle(
+                      fontSize: 16.spMin,
+                      color: context.color.black,
+                    ),
+                  ),
+                ),
               ),
               const Spacer(),
               const Icon(Icons.arrow_forward_ios, size: 20, color: Colors.black)
@@ -201,60 +215,120 @@ class ProfileSettingPage extends StatelessWidget
     });
   }
 
-  void showdialog(BuildContext context) {
-    final settingCtrl = globalController<SettingController>();
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        List<String> languages = ["English", "Vietnamese", "Korean"];
-        String selectedLanguage = "English";
-        String tempSelectedLanguage = selectedLanguage;
-        return AlertDialog(
-          title: Text(tr("setting.languages")),
-          content: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
-              return DropdownButton<String>(
-                value: tempSelectedLanguage,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    tempSelectedLanguage = newValue!;
-                  });
-                },
-                items: languages.map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
+  Widget get languageBtn => Builder(
+        builder: (context) {
+          final settingCtrl = globalController<SettingController>();
+          return BouncesAnimatedButton(
+            height: 60.hMin,
+            onPressed: () {
+              showDialog(
+                context: Get.context!,
+                builder: (BuildContext context) {
+                  List<String> languages = ["English", "Vietnamese", "Korean"];
+                  String selectedLanguage = "English";
+                  String tempSelectedLanguage = selectedLanguage;
+                  return AlertDialog(
+                    title: Text(tr("setting.languages")),
+                    content: StatefulBuilder(
+                      builder: (BuildContext context, StateSetter setState) {
+                        return DropdownButton<String>(
+                          value: tempSelectedLanguage,
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              tempSelectedLanguage = newValue!;
+                            });
+                          },
+                          items: languages
+                              .map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                        );
+                      },
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          nav.back();
+                        },
+                        child: Text(tr("setting.cancel")),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          selectedLanguage = tempSelectedLanguage;
+                          if (selectedLanguage == "English") {
+                            settingCtrl.language.value =
+                                LanguageSupported.english;
+                          }
+                          if (selectedLanguage == "Vietnamese") {
+                            settingCtrl.language.value =
+                                LanguageSupported.vietnamese;
+                          }
+                          if (selectedLanguage == "Korean") {
+                            settingCtrl.language.value =
+                                LanguageSupported.korean;
+                          }
+                          html.window.location.reload();
+                        },
+                        child: Text(tr("setting.ok")),
+                      ),
+                    ],
                   );
-                }).toList(),
+                },
               );
             },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                nav.back();
-              },
-              child: Text(tr("setting.cancel")),
+            leading: DecoratedBox(
+              decoration: const BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: Colors.grey, width: 1),
+                ),
+              ),
+              child: Row(
+                children: [
+                  SvgPicture.asset(
+                    LocalSvgRes.localize,
+                    colorFilter: ColorFilter.mode(
+                      context.color.black,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 17.wMin,
+                        vertical: 15.hMin,
+                      ),
+                      child: Text(
+                        tr("setting.languages"),
+                        textAlign: TextAlign.start,
+                        style: TextStyle(
+                          fontSize: 16.spMin,
+                          color: context.color.black,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  const Icon(Icons.arrow_forward_ios,
+                      size: 20, color: Colors.black)
+                ],
+              ),
             ),
-            TextButton(
-              onPressed: () {
-                selectedLanguage = tempSelectedLanguage;
-                if (selectedLanguage == "English") {
-                  settingCtrl.language.value = LanguageSupported.english;
-                }
-                if (selectedLanguage == "Vietnamese") {
-                  settingCtrl.language.value = LanguageSupported.vietnamese;
-                }
-                if (selectedLanguage == "Korean") {
-                  settingCtrl.language.value = LanguageSupported.korean;
-                }
-                html.window.location.reload();
-              },
-              child: Text(tr("setting.ok")),
-            ),
-          ],
-        );
-      },
-    );
-  }
+          ).paddingSymmetric(horizontal: 1.wMin);
+        },
+      );
+}
+
+class SettingMenuItem {
+  final String icon;
+  final String title;
+  final VoidCallback onTap;
+
+  SettingMenuItem({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+  });
 }
