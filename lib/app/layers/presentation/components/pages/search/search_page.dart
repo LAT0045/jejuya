@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:image_network/image_network.dart';
+import 'package:jejuya/app/common/ui/image/image_remote.dart';
 import 'package:jejuya/app/common/ui/svg/svg_local.dart';
 import 'package:jejuya/app/common/utils/extension/build_context/app_color.dart';
 import 'package:jejuya/app/common/utils/extension/num/adaptive_size.dart';
@@ -45,8 +46,7 @@ class SearchPage extends StatelessWidget
                               await ctrl.fetchDestinationDetail(
                                   ctrl.searchResults.value[index].id);
                           nav.toDestinationDetail(
-                              destinationId:
-                                  ctrl.searchResults.value[index].id);
+                              destinationDetail: destinationDetail);
                         },
                         child: _searchItem(ctrl.searchResults.value[index])
                             .paddingSymmetric(
@@ -86,8 +86,7 @@ class SearchPage extends StatelessWidget
           child: Row(
             children: [
               ImageNetwork(
-                image:
-                    "https://maps.googleapis.com/maps/api/place/textsearch/json?query=${Uri.encodeComponent(destination.businessNameEnglish)}&key=${dotenv.env['GOOGLE_MAP']}",
+                image: RemoteImageRes.test,
                 height: 80.rMin,
                 width: 80.rMin,
                 duration: 1500,

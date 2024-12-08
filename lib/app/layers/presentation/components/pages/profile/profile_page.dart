@@ -116,7 +116,7 @@ class ProfilePage extends StatelessWidget
             children: [
               Expanded(
                 child: Text(
-                  "Name",
+                  "Profile",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20.spMin,
@@ -151,7 +151,8 @@ class ProfilePage extends StatelessWidget
   Widget get _ava => Builder(
         builder: (context) {
           return ImageNetwork(
-            image: RemoteImageRes.background,
+            image:
+                "https://ui-avatars.com/api/?name=User&background=random&size=200&font-size=0.33",
             height: 106.rMin,
             width: 106.rMin,
             duration: 1500,
@@ -180,14 +181,14 @@ class ProfilePage extends StatelessWidget
                 ),
                 child: Row(
                   children: [
-                    _infoItem(tr("profile.favorited"), "10")
+                    _infoItem(tr("profile.favorited"), "0")
                         .paddingOnly(right: 10.wMin),
                     Container(
                       color: Colors.black,
                       width: 1.wMin,
                       height: 40.hMin,
                     ).paddingOnly(right: 20.wMin),
-                    _infoItem(tr("profile.visited"), "10"),
+                    _infoItem(tr("profile.visited"), "0"),
                   ],
                 ).paddingOnly(
                   top: 8.hMin,
@@ -230,7 +231,7 @@ class ProfilePage extends StatelessWidget
                 crossAxisSpacing: 6,
                 childAspectRatio: 200 / (200 * 1.25),
               ),
-              itemCount: 50,
+              itemCount: 0,
               itemBuilder: (context, index) {
                 return _listItem;
               },

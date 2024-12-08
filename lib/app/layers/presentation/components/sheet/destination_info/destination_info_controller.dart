@@ -2,10 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:jejuya/app/core_impl/di/injector_impl.dart';
-import 'package:jejuya/app/layers/data/sources/local/model/destination/destination.dart';
-// import 'package:jejuya/app/layers/data/sources/local/model/destinationDetail/destinationDetail.dart';
-import 'package:jejuya/app/layers/domain/usecases/destination/destination_detail_usecase.dart';
-import 'package:jejuya/app/layers/presentation/components/pages/schedule_detail/mockup/schedule.dart';
+import 'package:jejuya/app/layers/data/sources/local/model/hotel/hotel.dart';
 import 'package:jejuya/app/layers/presentation/components/sheet/destination_info/enum/destination_detail_state.dart';
 import 'package:jejuya/app/layers/data/sources/local/model/destination/destination_detail.dart';
 import 'package:jejuya/core/arch/domain/usecase/usecase_provider.dart';
@@ -17,22 +14,21 @@ import 'package:http/http.dart' as http;
 class DestinationInfoController extends BaseController with UseCaseProvider {
   /// Default constructor for the DestinationInfoController.
   DestinationInfoController({
-    this.location,
-    required this.destination,
-    // this.destinationDetail,
-  }) {
-    fetchDestinationDetail();
-  }
+    required this.destinationDetail,
+    required this.hotel,
+  });
 
   // --- Member Variables ---
-  final Destination? destination;
-  final Location? location;
   final String apiKey = 'AlzaSyoor0pqspqqN3aQ3YU4sopqb_SYm8XjAlp';
-  // DestinationDetail? destinationDetail;
+
+  final DestinationDetail? destinationDetail;
+  final Hotel? hotel;
+
   // --- Computed Variables ---
   // --- State Variables ---
 
-  final destinationDetail = listenableStatus<DestinationDetail?>(null);
+  //final destinationDetail = listenableStatus<DestinationDetail?>(null);
+  //final hotelDetail = listenableStatus<HotelDetail?>(null);
   final imageUrl = listenable<String?>(
       'https://dummyimage.com/500x300/cccccc/ffffff&text=No+Image+Available');
 
@@ -43,40 +39,43 @@ class DestinationInfoController extends BaseController with UseCaseProvider {
   final fetchDetailState =
       listenable<DestinationDetailState>(DestinationDetailState.none);
 
-  late final _fetchDestinationDetail = usecase<DestinationDetailUseCase>();
+  //late final _fetchDestinationDetail = usecase<DestinationDetailUseCase>();
 
-  Future<void> fetchDestinationDetail() async {
-    try {
-      fetchDetailState.value = DestinationDetailState.loading;
+  // Future<void> fetchDestinationDetail() async {
+  //   try {
+  //     fetchDetailState.value = DestinationDetailState.loading;
 
-      if (destination?.id == null) return;
-      await _fetchDestinationDetail
-          .execute(
-            DestinationDetailRequest(destinationId: destination?.id),
-          )
-          .then((response) => response.destinationDetail)
-          .assignTo(destinationDetail);
-      fetchDetailState.value = DestinationDetailState.done;
+  //     if (id == null) return;
 
-      // print(destinationDetail.value!.latitude);
-      // print(destinationDetail.value!.longitude);
-      final id = await fetchPlaceId(destinationDetail.value!.latitude,
-          destinationDetail.value!.longitude, apiKey);
+  //     await _fetchDestinationDetail
+  //         .execute(
+  //           DestinationDetailRequest(
+  //               destinationId: id),
+  //         )
+  //         .then((response) => response.destinationDetail)
+  //         .assignTo(destinationDetail);
 
-      print(id);
-      final re = await fetchPhotoReference(id!, apiKey);
-      // print(re);
-      // print(getPhotoUrl(re!, apiKey));
-      imageUrl.value = getPhotoUrl(re!, apiKey);
-    } catch (e, s) {
-      log.error(
-        '[DestinationDetailController] Failed to fetch detail:',
-        error: e,
-        stackTrace: s,
-      );
-      nav.showSnackBar(error: e);
-    }
-  }
+  //     fetchDetailState.value = DestinationDetailState.done;
+
+  //     // print(destinationDetail.value!.latitude);
+  //     // print(destinationDetail.value!.longitude);
+  //     final id = await fetchPlaceId(destinationDetail.value!.latitude,
+  //         destinationDetail.value!.longitude, apiKey);
+
+  //     print(id);
+  //     final re = await fetchPhotoReference(id!, apiKey);
+  //     // print(re);
+  //     // print(getPhotoUrl(re!, apiKey));
+  //     imageUrl.value = getPhotoUrl(re!, apiKey);
+  //   } catch (e, s) {
+  //     log.error(
+  //       '[DestinationDetailController] Failed to fetch detail:',
+  //       error: e,
+  //       stackTrace: s,
+  //     );
+  //     nav.showSnackBar(error: e);
+  //   }
+  // }
 
   Future<String?> fetchPlaceId(String lat, String lng, String apiKey) async {
     final url =
@@ -117,7 +116,7 @@ class DestinationInfoController extends BaseController with UseCaseProvider {
   Future<void> fetchPhoto() async {
     try {
       final placeId = await fetchPlaceId(
-          destination!.latitude, destination!.longitude, apiKey);
+          destinationDetail!.latitude, destinationDetail!.longitude, apiKey);
       //print(placeId);
       if (placeId != null) {
         final photoReference = await fetchPhotoReference(placeId, apiKey);

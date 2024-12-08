@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:jejuya/app/common/utils/extension/build_context/app_color.dart';
 import 'package:jejuya/app/core_impl/di/injector_impl.dart';
 import 'package:jejuya/app/layers/data/sources/local/model/destination/destination.dart';
+import 'package:jejuya/app/layers/data/sources/local/model/hotel/hotel.dart';
 import 'package:jejuya/app/layers/data/sources/local/model/schedule/schedule_item.dart';
 import 'package:jejuya/app/layers/domain/usecases/destination/recommend_destination_usecase.dart';
 import 'package:jejuya/app/layers/domain/usecases/schedule/create_schedule_usecase.dart';
@@ -20,13 +22,14 @@ import 'package:jejuya/core/reactive/dynamic_to_obs_data.dart';
 /// Controller for the Create schedule page
 class CreateScheduleController extends BaseController with UseCaseProvider {
   /// Default constructor for the CreateScheduleController.
-  CreateScheduleController() {
-    // schedules = Schedule.fromJsonList(scheduleMockup);
-    // fetchRecommendedDestinations();
+  CreateScheduleController({
+    required this.hotel,
+  }) {
+    _getAccomodation();
   }
 
   // --- Member Variables ---
-  // late List<Schedule> schedules;
+  Hotel? hotel;
 
   /// Name Controller
   final TextEditingController nameController = TextEditingController();
@@ -55,6 +58,8 @@ class CreateScheduleController extends BaseController with UseCaseProvider {
   final selectedMinute = listenable<int>(0);
 
   final destinations = listenable<List<Destination>>([]);
+
+  final accomodation = listenable<String>("");
 
   final fetchState =
       listenable<RecommendDestinationState>(RecommendDestinationState.none);
@@ -285,6 +290,12 @@ class CreateScheduleController extends BaseController with UseCaseProvider {
       return [];
     }
     return groupDestinationsByDate(destinations.value)[index]['destinations'];
+  }
+
+  void _getAccomodation() {
+    accomodation.value = hotel != null
+        ? hotel!.businessNameEnglish
+        : tr("create_schedule.accommodation");
   }
 
   @override

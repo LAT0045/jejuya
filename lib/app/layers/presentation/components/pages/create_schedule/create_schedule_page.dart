@@ -145,6 +145,7 @@ class CreateSchedulePage extends StatelessWidget
       });
 
   Widget get _infoDisplay => Builder(builder: (context) {
+        final ctrl = controller(context);
         return Column(
           children: [
             _inputField(
@@ -157,14 +158,17 @@ class CreateSchedulePage extends StatelessWidget
             ),
             _inputField(
               controller(context).locationController,
-              tr("create_schedule.accommodation"),
+              ctrl.accomodation.value,
               context.color.info,
               1,
               12.spMin,
               LocalSvgRes.marker,
               isReadOnly: true,
               onTap: () {
-                nav.showSelectDestinationSheet();
+                nav.showSelectDestinationSheet(
+                  hotel: ctrl.hotel,
+                  isSelectHotel: true,
+                );
               },
             ).paddingSymmetric(vertical: 15.hMin),
             _inputField(
@@ -400,7 +404,7 @@ class CreateSchedulePage extends StatelessWidget
   Widget _destinationItem(Destination destination, int index) => Observer(
         builder: (context) {
           return GestureDetector(
-            onTap: () => nav.showDetinationInfoSheet(destination: destination),
+            //onTap: () => nav.showDetinationInfoSheet(destination: destination),
             child: Container(
               decoration: BoxDecoration(
                 color: context.color.white,
@@ -557,7 +561,9 @@ class CreateSchedulePage extends StatelessWidget
               LocalSvgRes.marker,
               isReadOnly: true,
               onTap: () {
-                nav.showSelectDestinationSheet();
+                nav.showSelectDestinationSheet(
+                  isSelectHotel: false,
+                );
               },
             ),
             Row(

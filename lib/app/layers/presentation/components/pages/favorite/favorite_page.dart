@@ -378,8 +378,11 @@ class FavoritePage extends StatelessWidget
             child: BouncesAnimatedButton(
               width: context.width.hMin,
               height: 140.hMin,
-              onPressed: () =>
-                  nav.toDestinationDetail(destinationId: id.toString()),
+              onPressed: () async {
+                final destinationDetail =
+                    await ctrl.fetchDestinationDetail(id.toString());
+                nav.toDestinationDetail(destinationDetail: destinationDetail!);
+              },
               leading: Container(
                 decoration: BoxDecoration(
                   border: Border(
