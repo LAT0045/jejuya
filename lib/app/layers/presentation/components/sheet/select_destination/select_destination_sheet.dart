@@ -35,41 +35,40 @@ class SelectDestinationSheet extends StatelessWidget
 
   Widget get _body => Builder(
         builder: (context) {
-          return Column(
-            children: [
-              Row(
-                children: [
-                  _locationDisplay(
-                    "Nohyung Supermarket",
-                    "98 Nohyeong-ro, Jeju-si",
-                  ),
-                  SizedBox(width: 10.wMin),
-                  BouncesAnimatedButton(
-                    leading: const Text(
-                      "Thêm",
-                      style: TextStyle(color: Colors.white),
+          final ctrl = controller(context);
+          return Observer(
+            builder: (_) => Column(
+              children: [
+                Row(
+                  children: [
+                    _locationDisplay(
+                      ctrl.name.value,
+                      ctrl.address.value,
                     ),
-                    height: 30.hMin,
-                    width: 80.wMin,
-                    decoration: BoxDecoration(
-                      color: context.color.primaryColor,
-                      borderRadius: BorderRadius.circular(8.rMin),
+                    SizedBox(width: 10.wMin),
+                    BouncesAnimatedButton(
+                      leading: const Text(
+                        "Thêm",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      height: 30.hMin,
+                      width: 80.wMin,
+                      decoration: BoxDecoration(
+                        color: context.color.primaryColor,
+                        borderRadius: BorderRadius.circular(8.rMin),
+                      ),
+                      onPressed: () {},
                     ),
-                    onPressed: () {},
-                  ),
-                ],
-              ).paddingOnly(top: 25.hMin),
-              _recommendations(
-                [
-                  "Nohyung Supermarket",
-                  "Nohyung Supermarket",
-                  "Nohyung Supermarket",
-                ],
-              ),
-              _searchBar,
-              _tags(["family", "friends", "shop"]),
-              _myMap,
-            ],
+                  ],
+                ).paddingOnly(top: 25.hMin),
+                _recommendations(
+                  [],
+                ),
+                _searchBar,
+                _tags([]),
+                _myMap,
+              ],
+            ),
           );
         },
       ).paddingSymmetric(vertical: 10.hMin, horizontal: 10.wMin);
@@ -134,16 +133,20 @@ class SelectDestinationSheet extends StatelessWidget
 
   Widget _recommendations(List<String> locations) => Builder(
         builder: (context) {
-          return SizedBox(
-            height: 150.hMin,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: locations.length,
-              itemBuilder: (context, index) {
-                return _recommendationItem(locations[index]);
-              },
-            ),
-          );
+          return locations.isEmpty
+              ? SizedBox(
+                  height: 10.hMin,
+                )
+              : SizedBox(
+                  height: 150.hMin,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: locations.length,
+                    itemBuilder: (context, index) {
+                      return _recommendationItem(locations[index]);
+                    },
+                  ),
+                );
         },
       );
 
@@ -250,16 +253,20 @@ class SelectDestinationSheet extends StatelessWidget
 
   Widget _tags(List<String> tags) => Builder(
         builder: (context) {
-          return SizedBox(
-            height: 25.hMin,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: tags.length,
-              itemBuilder: (context, index) {
-                return _tag(tags[index]);
-              },
-            ),
-          ).paddingSymmetric(vertical: 10.hMin);
+          return tags.isEmpty
+              ? SizedBox(
+                  height: 10.hMin,
+                )
+              : SizedBox(
+                  height: 25.hMin,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: tags.length,
+                    itemBuilder: (context, index) {
+                      return _tag(tags[index]);
+                    },
+                  ),
+                ).paddingSymmetric(vertical: 10.hMin);
         },
       );
 
@@ -302,6 +309,7 @@ class SelectDestinationSheet extends StatelessWidget
 
   Widget get _myMap => Builder(
         builder: (context) {
+          final ctrl = controller(context);
           return Observer(
             builder: (_) => Expanded(
               child: GoogleMap(
@@ -312,17 +320,21 @@ class SelectDestinationSheet extends StatelessWidget
                 myLocationButtonEnabled: true,
                 zoomControlsEnabled: true,
                 mapType: MapType.normal,
-                markers: Set<Marker>.from(controller(context).markers),
-                circles: {
-                  Circle(
-                    circleId: const CircleId('current_location_radius'),
-                    center: controller(context).selectedMarkerPosition.value,
-                    radius: controller(context).radiusInMeters.value,
-                    fillColor: Colors.blue.withOpacity(0.3),
-                    strokeColor: Colors.blue,
-                    strokeWidth: 1,
-                  ),
-                },
+                onCameraMove: controller(context).onCameraMove,
+                markers: Set<Marker>.from(controller(context).markers.value),
+                circles: ctrl.isSelectHotel
+                    ? {}
+                    : {
+                        Circle(
+                          circleId: const CircleId('current_location_radius'),
+                          center:
+                              controller(context).selectedMarkerPosition.value,
+                          radius: controller(context).curRadiusInMeters.value,
+                          fillColor: Colors.blue.withValues(alpha: 0.3),
+                          strokeColor: Colors.blue,
+                          strokeWidth: 1,
+                        ),
+                      },
               ),
             ),
           );

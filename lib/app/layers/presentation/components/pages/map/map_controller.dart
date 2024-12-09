@@ -1,11 +1,10 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
-
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:jejuya/app/common/ui/image/image_local.dart';
 import 'package:jejuya/app/core_impl/di/injector_impl.dart';
 import 'package:jejuya/app/layers/data/sources/local/model/destination/destination.dart';
@@ -27,7 +26,7 @@ class MapController extends BaseController with UseCaseProvider {
 
   @override
   Future<void> initialize() async {
-    await _fetchHotels();
+    await _loadHotels();
     await _fetchNearbyDestinations();
     await _getCurrentLocation();
     return super.initialize();
@@ -37,6 +36,8 @@ class MapController extends BaseController with UseCaseProvider {
   final Completer<GoogleMapController> _mapController = Completer();
   final TextEditingController searchController = TextEditingController();
   static const LatLng jejuIsland = LatLng(33.363646, 126.545454);
+  static const String hotelsBoxName = 'hotels';
+  static const Duration cacheDuration = Duration(days: 30);
 
   /// Usecase for fetching nearby destinations
   late final _getNearbyDestinationUsecase =
@@ -61,8 +62,10 @@ class MapController extends BaseController with UseCaseProvider {
   final currentMarkerIcon = listenable<BitmapDescriptor>(
     BitmapDescriptor.defaultMarker,
   );
+
   final radiusInMeters = listenable<double>(5000.0);
   final isRadiusSliderVisible = listenable<bool>(false);
+
   final selectedMarkerPosition =
       listenable<LatLng>(const LatLng(33.5050011, 126.5277575));
   final currentMarkerPosition =
@@ -130,6 +133,29 @@ class MapController extends BaseController with UseCaseProvider {
     }
   }
 
+  Future<void> _loadHotels() async {
+    final hotelBox = await Hive.openBox<Hotel>(hotelsBoxName);
+    final timestampBox = await Hive.openBox('timestampBox');
+    final lastUpdated = timestampBox.get('lastUpdated') as DateTime?;
+
+    // Check if data is within cache duration
+    if (lastUpdated != null &&
+        DateTime.now().difference(lastUpdated) < cacheDuration) {
+      hotels.value = hotelBox.values.cast<Hotel>().toList();
+    } else {
+      await _fetchHotels();
+      await hotelBox.clear();
+
+      // Save the new list of hotels
+      for (var hotel in hotels.value) {
+        hotelBox.put(hotel.id, hotel);
+      }
+
+      // Store the lastUpdated timestamp
+      await timestampBox.put('lastUpdated', DateTime.now());
+    }
+  }
+
   Future<DestinationDetail> _fetchDestinationDetail(String id) async {
     try {
       final response = await GetDestinationDetailUsecase().execute(
@@ -148,43 +174,50 @@ class MapController extends BaseController with UseCaseProvider {
 
     // User position marker (main marker)
     Marker userMarker = Marker(
-        markerId: const MarkerId('user_marker'),
-        position: currentMarkerPosition.value,
-        icon: BitmapDescriptor.defaultMarker, // Use different icon for user
-        zIndex: 3,
-        onTap: () {
-          // Update the center position for radius and nearby search
-          selectedMarkerPosition.value = currentMarkerPosition.value;
-          _centerOnPosition(selectedMarkerPosition.value);
-          _fetchNearbyDestinations();
-          _updateMarkers();
-        });
+      markerId: const MarkerId('user_marker'),
+      position: currentMarkerPosition.value,
+      icon: BitmapDescriptor.defaultMarker, // Use different icon for user
+      zIndex: 3,
+      onTap: () {
+        // Update the center position for radius and nearby search
+        selectedMarkerPosition.value = currentMarkerPosition.value;
+        _centerOnPosition(selectedMarkerPosition.value);
+        _fetchNearbyDestinations();
+        _updateMarkers();
+      },
+    );
 
     // Hotel markers
-    List<Marker> hotelMarkers = hotels.value.map((hotel) {
-      bool isSelected = selectedHotelMarkerId == hotel.id;
-      return Marker(
-          markerId: MarkerId('hotel_${hotel.id}'),
-          position: LatLng(
-            double.parse(hotel.latitude),
-            double.parse(hotel.longitude),
-          ),
-          icon: isSelected
-              ? selectedHotelMarkerIcon.value
-              : hotelMarkerIcon.value,
-          zIndex: isSelected ? 3 : 1,
-          onTap: () {
-            selectedHotelMarkerId = hotel.id;
-            // Update the center position for radius and nearby search
-            selectedMarkerPosition.value = LatLng(
+    List<Marker> hotelMarkers = hotels.value.map(
+      (hotel) {
+        bool isSelected = selectedHotelMarkerId == hotel.id;
+        return Marker(
+            markerId: MarkerId('hotel_${hotel.id}'),
+            position: LatLng(
               double.parse(hotel.latitude),
               double.parse(hotel.longitude),
-            );
-            _centerOnPosition(selectedMarkerPosition.value);
-            _fetchNearbyDestinations();
-            _updateMarkers();
-          });
-    }).toList();
+            ),
+            icon: isSelected
+                ? selectedHotelMarkerIcon.value
+                : hotelMarkerIcon.value,
+            zIndex: isSelected ? 3 : 1,
+            onTap: () {
+              selectedHotelMarkerId = hotel.id;
+              // Update the center position for radius and nearby search
+              selectedMarkerPosition.value = LatLng(
+                double.parse(hotel.latitude),
+                double.parse(hotel.longitude),
+              );
+              _centerOnPosition(selectedMarkerPosition.value);
+              _fetchNearbyDestinations();
+              _updateMarkers();
+
+              nav.showDetinationInfoSheet(
+                hotel: hotel,
+              );
+            });
+      },
+    ).toList();
 
     // Tourist markers remain the same
     List<Marker> touristMarkers = destinations.value.map((destination) {
@@ -197,7 +230,10 @@ class MapController extends BaseController with UseCaseProvider {
         icon: touristMarkerIcon.value,
         zIndex: 2,
         onTap: () async {
-          nav.showDetinationInfoSheet(destination: destination);
+          final detail = await _fetchDestinationDetail(destination.id);
+          nav.showDetinationInfoSheet(
+            destinationDetail: detail,
+          );
         },
       );
     }).toList();

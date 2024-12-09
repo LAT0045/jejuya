@@ -1,20 +1,10 @@
 import 'dart:async';
 
-import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:get/get_connect/http/src/request/request.dart';
-import 'package:jejuya/app/core_impl/di/injector_impl.dart';
-import 'package:jejuya/app/layers/data/sources/local/model/destination/destination_detail.dart';
 import 'package:jejuya/app/layers/data/sources/local/model/language/language_supported.dart';
-import 'package:jejuya/app/layers/data/sources/local/model/schedule/schedule.dart';
-import 'package:jejuya/app/layers/data/sources/local/model/schedule/schedule_item.dart';
-import 'package:jejuya/app/layers/domain/usecases/destination/destination_detail_usecase.dart';
-import 'package:jejuya/app/layers/presentation/components/pages/schedule_detail/mockup/schedule.dart'
-    as scheduleMockup;
-import 'package:jejuya/app/layers/presentation/components/pages/schedule_detail/mockup/schedule_mockup_api.dart '
-    as scheduleMockupApi;
+import 'package:jejuya/app/layers/presentation/components/pages/schedule_detail/mockup/schedule.dart';
+import 'package:jejuya/app/layers/presentation/components/pages/schedule_detail/mockup/schedule_mockup_api.dart';
 import 'package:jejuya/app/layers/presentation/global_controllers/setting/setting_controller.dart';
-import 'package:jejuya/app/layers/presentation/nav_predefined.dart';
 import 'package:jejuya/core/arch/domain/usecase/usecase_provider.dart';
 import 'package:jejuya/core/arch/presentation/controller/base_controller.dart';
 import 'package:jejuya/core/arch/presentation/controller/controller_provider.dart';
@@ -24,104 +14,26 @@ import 'package:jejuya/core/reactive/dynamic_to_obs_data.dart';
 class ScheduleDetailController extends BaseController
     with UseCaseProvider, GlobalControllerProvider {
   /// Default constructor for the ScheduleDetailController.
-  ScheduleDetailController({required this.schedule}) {
-    scheduleItemsByDate = groupScheduleItemsByDate();
-
-    _fetchData();
-    initialize();
+  ScheduleDetailController({required this.scheduleId}) {
+    schedules = Schedule.fromJsonList(scheduleMockup);
   }
 
   // --- Member Variables ---
-
-  late List<scheduleMockup.Schedule> schedules;
-  late Map<String, List<ScheduleItem>> scheduleItemsByDate;
-  final Schedule? schedule;
+  late List<Schedule> schedules;
+  final String? scheduleId;
   // --- State Variables ---
   final selectedDayIndex = listenable<int>(0);
 
   final selectedDestinationIndex = listenable<int>(0);
 
-  bool _isLoadingPage = false;
-  int _page = 1;
-  ScrollController scrollController = ScrollController();
-  List<DestinationDetail?> destinationDetails =
-      listenableList<DestinationDetail?>([]);
-
-  late final _fetchDestinationDetail = usecase<DestinationDetailUseCase>();
   // --- State Computed ---
   // --- Usecases ---
   // --- Computed Variables ---
 
   // --- Methods ---
 
-  @override
-  Future<void> initialize() async {
-    super.initialize();
-    scrollController.addListener(() {
-      if (scrollController.position.pixels ==
-          scrollController.position.maxScrollExtent) {
-        _fetchData();
-      }
-    });
-  }
-
-  void _fetchData() async {
-    List<ScheduleItem> newItems = scheduleItemsByDate.values
-        .elementAt(selectedDayIndex.value)!
-        .skip(destinationDetails.length)
-        .take(3)
-        .toList();
-
-    List<DestinationDetail?> temp = [];
-    for (var item in newItems) {
-      temp.add(await fetchDestinationDetail(item.id));
-    }
-
-    destinationDetails.addAll(temp);
-  }
-
-  Future<DestinationDetail?> fetchDestinationDetail(
-      String? destinationId) async {
-    try {
-      if (destinationId == null) return null;
-      DestinationDetail destinationDetail = await _fetchDestinationDetail
-          .execute(
-            DestinationDetailRequest(destinationId: destinationId),
-          )
-          .then((response) => response.destinationDetail);
-
-      return destinationDetail;
-    } catch (e, s) {
-      log.error(
-        '[DestinationDetailController] Failed to fetch detail:',
-        error: e,
-        stackTrace: s,
-      );
-      nav.showSnackBar(error: e);
-    }
-  }
-
-  Map<String, List<ScheduleItem>> groupScheduleItemsByDate() {
-    final Map<String, List<ScheduleItem>> groupedData = {};
-    for (var entry in schedule!.scheduleItems!) {
-      final String formattedDate =
-          DateFormat('yyyy-MM-dd').format(entry.startTime!);
-
-      // DateTime dateTime = DateTime.parse(formattedDate);
-      if (!groupedData.containsKey(formattedDate)) {
-        groupedData[formattedDate] = [];
-      }
-      groupedData[formattedDate]!.add(entry);
-    }
-    return groupedData;
-  }
-
   void updateSelectedDay(int index) {
     selectedDayIndex.value = index;
-    print(
-        "count: ${scheduleItemsByDate.values.elementAt(selectedDayIndex.value)!.length}");
-    destinationDetails.clear();
-    _fetchData();
   }
 
   Map<String, String> formatDate(String dateString) {

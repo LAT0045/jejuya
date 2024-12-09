@@ -60,7 +60,9 @@ class DestinationInfoSheet extends StatelessWidget
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                "${ctrl.destination?.businessNameEnglish}",
+                ctrl.destinationDetail != null
+                    ? ctrl.destinationDetail!.businessNameEnglish
+                    : ctrl.hotel!.businessNameEnglish,
                 style: TextStyle(
                   fontSize: 23.spMin,
                   fontWeight: FontWeight.bold,
@@ -68,11 +70,15 @@ class DestinationInfoSheet extends StatelessWidget
               ).paddingOnly(bottom: 20.hMin),
               _iconText(
                 LocalSvgRes.desAddress,
-                "${ctrl.destinationDetail.value?.locationEnglish}",
+                ctrl.destinationDetail != null
+                    ? ctrl.destinationDetail!.locationEnglish
+                    : ctrl.hotel!.roadNameAdressEnglish,
               ).paddingOnly(bottom: 20.hMin),
               _iconText(
                 LocalSvgRes.desPhone,
-                "${ctrl.destinationDetail.value?.contact}",
+                ctrl.destinationDetail != null
+                    ? ctrl.destinationDetail!.contact
+                    : ctrl.hotel!.contact,
               ),
             ],
           );
@@ -81,6 +87,7 @@ class DestinationInfoSheet extends StatelessWidget
 
   Widget get _headerBtn => Builder(
         builder: (context) {
+          final ctrl = controller(context);
           return Column(
             children: [
               BouncesAnimatedButton(
@@ -111,6 +118,11 @@ class DestinationInfoSheet extends StatelessWidget
               BouncesAnimatedButton(
                 width: 45.rMin,
                 height: 45.rMin,
+                onPressed: () {
+                  if (ctrl.hotel != null) {
+                    nav.toCreateSchedule(hotel: ctrl.hotel!);
+                  }
+                },
                 leading: Container(
                   decoration: BoxDecoration(
                     color: context.color.primaryColor,
@@ -168,8 +180,8 @@ class DestinationInfoSheet extends StatelessWidget
   Widget get _image => Builder(
         builder: (context) {
           final ctrl = controller(context);
-          final query = Uri.encodeComponent(
-              '${ctrl.destination!.businessNameEnglish.toLowerCase()} in jeju');
+          // final query = Uri.encodeComponent(
+          //     '${ctrl.destinationDetail!.businessNameEnglish.toLowerCase()} in jeju');
           //"https://maps.gomaps.pro/maps/api/place/textsearch/json?query=$query&key=AlzaSyoor0pqspqqN3aQ3YU4sopqb_SYm8XjAlp"
 
           return ImageNetwork(
@@ -196,7 +208,7 @@ class DestinationInfoSheet extends StatelessWidget
           final ctrl = controller(context);
           return BouncesAnimatedButton(
             onPressed: () => nav.toDestinationDetail(
-              destinationId: ctrl.destination?.id,
+              destinationDetail: ctrl.destinationDetail!,
             ),
             leading: Text(
               tr("destination_info_sheet.see_more"),

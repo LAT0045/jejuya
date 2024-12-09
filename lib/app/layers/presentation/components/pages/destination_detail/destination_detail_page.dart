@@ -61,10 +61,10 @@ class DestinationDetailPage extends StatelessWidget
   Widget get _infoContainer => Observer(
         builder: (context) {
           final ctrl = controller(context);
-          final categoryList = ctrl.categoryConvert(
-              ctrl.destinationDetail.value?.categoryEnglish ?? "");
+          final categoryList =
+              ctrl.categoryConvert(ctrl.destinationDetail!.categoryEnglish);
           final categoryDetailList = ctrl.categoryDetailConvert(
-              ctrl.destinationDetail.value?.detailedCategoryEnglish ?? "");
+              ctrl.destinationDetail!.detailedCategoryEnglish);
           return Container(
             width: context.width,
             decoration: BoxDecoration(
@@ -96,7 +96,7 @@ class DestinationDetailPage extends StatelessWidget
         builder: (context) {
           final ctrl = controller(context);
           return Text(
-            ctrl.destinationDetail.value?.businessNameEnglish ?? "",
+            ctrl.destinationDetail!.businessNameEnglish,
             style: TextStyle(
               color: context.color.black,
               fontSize: 20.spMin,
@@ -110,7 +110,7 @@ class DestinationDetailPage extends StatelessWidget
         builder: (context) {
           final ctrl = controller(context);
           return Text(
-            ctrl.destinationDetail.value?.introductionEnglish ?? "",
+            ctrl.destinationDetail!.introductionEnglish,
             style: TextStyle(
               color: context.color.info,
               fontSize: 12.spMin,
@@ -141,15 +141,13 @@ class DestinationDetailPage extends StatelessWidget
                 child: Column(
                   children: [
                     _infoItem(LocalSvgRes.address,
-                        ctrl.destinationDetail.value?.locationEnglish ?? ""),
-                    _infoItem(
-                        LocalSvgRes.time,
-                        ctrl.destinationDetail.value?.operatingHoursEnglish ??
-                            ""),
+                        ctrl.destinationDetail!.locationEnglish),
+                    _infoItem(LocalSvgRes.time,
+                        ctrl.destinationDetail!.operatingHoursEnglish),
                     _infoItem(LocalSvgRes.schedule,
-                        ctrl.destinationDetail.value?.closedDaysEnglish ?? ""),
-                    _infoItem(LocalSvgRes.phone,
-                        ctrl.destinationDetail.value?.contact ?? ""),
+                        ctrl.destinationDetail!.closedDaysEnglish),
+                    _infoItem(
+                        LocalSvgRes.phone, ctrl.destinationDetail!.contact),
                   ],
                 ).paddingOnly(
                   left: 10.wMin,
@@ -277,7 +275,7 @@ class DestinationDetailPage extends StatelessWidget
               BouncesAnimatedButton(
                 onPressed: () {
                   js.context.callMethod(
-                      'open', [ctrl.destinationDetail.value?.reservationLink]);
+                      'open', [ctrl.destinationDetail!.reservationLink]);
                 },
                 decoration: BoxDecoration(
                   color: context.color.primaryColor,

@@ -1,9 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:jejuya/app/core_impl/di/injector_impl.dart';
-import 'package:jejuya/app/layers/data/sources/local/model/destination/destination.dart';
-// import 'package:jejuya/app/layers/data/sources/local/model/destinationDetail/destinationDetail.dart';
 import 'package:jejuya/app/layers/data/sources/local/model/destination/destination_detail.dart';
-import 'package:jejuya/app/layers/data/sources/local/model/schedule/schedule.dart';
+import 'package:jejuya/app/layers/data/sources/local/model/hotel/hotel.dart';
 import 'package:jejuya/app/layers/presentation/components/pages/create_schedule/create_schedule_controller.dart';
 import 'package:jejuya/app/layers/presentation/components/pages/create_schedule/create_schedule_page.dart';
 import 'package:jejuya/app/layers/presentation/components/pages/destination_detail/destination_detail_controller.dart';
@@ -70,7 +67,7 @@ class PredefinedRoute {
   static const String schedule = '/schedule';
 
   /// Schedule detail page route.
-  static const String scheduleDetail = '/schedule_detail';
+  static const String scheduleDetail = '/schedule_detail?.*';
 
   /// Favorite page route.
   static const String favorite = '/favorite';
@@ -140,15 +137,9 @@ class PredefinedPage {
     GetPageEnsureAuth(
       name: PredefinedRoute.scheduleDetail,
       page: () {
-        if (Get.arguments != null && Get.arguments is Schedule) {
-          Schedule? schedule = Get.arguments as Schedule?;
-          return nav.scheduleDetail(schedule);
-        } else {
-          if (FirebaseAuth.instance.currentUser == null) {
-            return nav.error;
-          }
-          return nav.home;
-        }
+        String? id =
+            Uri.tryParse(Get.currentRoute)!.queryParameters['schedule_id']!;
+        return nav.scheduleDetail(id);
       },
     ),
     GetPageEnsureAuth(
@@ -177,14 +168,16 @@ class PredefinedPage {
       name: PredefinedRoute.destinationDetail,
       // page: () => nav.destinationDetail,
       page: () {
-        final id =
-            Uri.tryParse(Get.currentRoute)!.queryParameters['destination_id']!;
-        return nav.destinationDetail(destinationId: id);
+        final destinationDetail = Get.arguments;
+        return nav.destinationDetail(destinationDetail: destinationDetail);
       },
     ),
     GetPageEnsureAuth(
       name: PredefinedRoute.createSchedule,
-      page: () => nav.createSchedule,
+      page: () {
+        final hotel = Get.arguments;
+        return nav.createSchedule(hotel: hotel);
+      },
     ),
     GetPageEnsureAuth(
       name: PredefinedRoute.profileSetting,
@@ -245,8 +238,8 @@ extension NavPredefined on navi.Navigator {
       );
 
   /// Home page widget.
-  Widget scheduleDetail(Schedule? schedule) => BaseProvider(
-        ctrl: ScheduleDetailController(schedule: schedule),
+  Widget scheduleDetail(String? scheduleId) => BaseProvider(
+        ctrl: ScheduleDetailController(scheduleId: scheduleId),
         child: const ScheduleDetailPage(),
       );
 
@@ -274,11 +267,11 @@ extension NavPredefined on navi.Navigator {
   //       child: const DestinationDetailPage(),
   //     );
   Widget destinationDetail({
-    required String? destinationId,
+    required DestinationDetail? destinationDetail,
   }) =>
       BaseProvider(
         ctrl: DestinationDetailController(
-          destinationId: destinationId,
+          destinationDetail: destinationDetail,
         ),
         child: const DestinationDetailPage(),
       );
@@ -290,8 +283,8 @@ extension NavPredefined on navi.Navigator {
       );
 
   /// Create schedule page widget.
-  Widget get createSchedule => BaseProvider(
-        ctrl: CreateScheduleController(),
+  Widget createSchedule({required Hotel? hotel}) => BaseProvider(
+        ctrl: CreateScheduleController(hotel: hotel),
         child: const CreateSchedulePage(),
       );
 
@@ -344,9 +337,10 @@ extension ToPagePredefined on navi.Navigator {
       );
 
   /// Navigate to the schedule page.
-  Future<T?>? toScheduleDetail<T>({required Schedule schedule}) => toNamed(
-        PredefinedRoute.scheduleDetail,
-        arguments: schedule,
+  Future<T?>? toScheduleDetail<T>({required String? scheduleId}) => toNamed(
+        PredefinedRoute.scheduleDetail
+            .replaceAll('.*', 'schedule_id=$scheduleId'),
+        arguments: scheduleId,
       );
 
   /// Navigate to the home page.
@@ -361,14 +355,14 @@ extension ToPagePredefined on navi.Navigator {
 
   /// Navigate to the home page.
   Future<T?>? toDestinationDetail<T>({
-    required String? destinationId,
+    required DestinationDetail destinationDetail,
   }) =>
       toNamed(
         PredefinedRoute.destinationDetail.replaceAll(
           '.*',
-          'destination_id=$destinationId',
+          'destinationDetail=${destinationDetail.toJson()}',
         ),
-        arguments: {destinationId, destinationDetail},
+        arguments: destinationDetail,
       );
 
   Future<T?>? toNotificationDetail<T>({required num? notificationId}) =>
@@ -379,8 +373,15 @@ extension ToPagePredefined on navi.Navigator {
       );
 
   /// Navigate to create schedule page.
-  Future<T?>? toCreateSchedule<T>() => toNamed(
-        PredefinedRoute.createSchedule,
+  Future<T?>? toCreateSchedule<T>({
+    Hotel? hotel,
+  }) =>
+      toNamed(
+        PredefinedRoute.createSchedule.replaceAll(
+          '.*',
+          'hotel=${hotel!.toJson()}',
+        ),
+        arguments: hotel,
       );
 
   Future<T?>? toProfileSetting<T>() => toNamed(
@@ -416,10 +417,16 @@ extension DialogPredefined on navi.Navigator {
 //         routeName: 'sheet-main',
 //       );
   /// Show destination info sheet
-  Future<T?>? showDetinationInfoSheet<T>({Destination? destination}) {
+  Future<T?>? showDetinationInfoSheet<T>({
+    DestinationDetail? destinationDetail,
+    Hotel? hotel,
+  }) {
     return bottomSheet(
       BaseProvider(
-        ctrl: DestinationInfoController(destination: destination),
+        ctrl: DestinationInfoController(
+          destinationDetail: destinationDetail,
+          hotel: hotel,
+        ),
         child: const DestinationInfoSheet(),
       ),
       routeName: PredefinedRoute.destinationInfo,
@@ -449,10 +456,18 @@ extension DialogPredefined on navi.Navigator {
   }
 
   /// Show select destination sheet
-  Future<T?>? showSelectDestinationSheet<T>() {
+  Future<T?>? showSelectDestinationSheet<T>({
+    Hotel? hotel,
+    double? radiusInMeters,
+    required bool isSelectHotel,
+  }) {
     return bottomSheet(
       BaseProvider(
-        ctrl: SelectDestinationController(),
+        ctrl: SelectDestinationController(
+          hotel: hotel,
+          radiusInMeters: radiusInMeters,
+          isSelectHotel: isSelectHotel,
+        ),
         child: const SelectDestinationSheet(),
       ),
       routeName: PredefinedRoute.destinationInfo,
